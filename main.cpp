@@ -1,72 +1,18 @@
-#include <Windows.h>
-#include <ctime>
-#include <string>
-#include <Shlobj.h>
-#include <filesystem>
-#include <tchar.h>
-#include <mutex>
-
-#define COMPILER_FOO_CPP
-
 
 #include "common_mqh_cpp_PCH.h"
-
-
-const string APP_NAME = _u("log_mng");
-
-const string LOG_NONE_GET_UNKNOWN_TIME_TEXT = _u("Unknown time");
-const string NONE_GET_ERROR_CODE_TEXT = _u("Failed get error code");
-
-
-const ulong MAX_DRIVE_FREE_BYTE = 1073741824;
-const ulong MAX_LOG_DRC_BYTE_SIZE = 524288000;
-
-const string LOG_MNG_CURRENT_LOG_FILE_NAME = _u("\\current.log");
-const string LOG_MNG_CURRENT_LOG_FILE_DRC = _u("\\log\\current\\log");
-
-const string LOG_MNG_LOG_FILE_NAME = _u("\\log.log");
-const string LOG_MNG_LOG_FILE_DRC = _u("\\log");
-
-const string SLASH_STRING = _u("/");
-
-
-
-
-
-const uint LOG_FILE_MAX_BYTE_SIZE = 5242880;
-
-
-
-const string ITEM_SYSTEM_LOG_FOLDER_DRC = _u("\\system");
-const string ITEM_SYSTEM_CURRENT_LOG_FOLDER_DRC = _u("\\current");
-const string ITEM_SYSTEM_DAY_LOG_FOLDER_DRC = _u("\\days");
-
-const int    SYSTEM_CURRENT_LOG_ROOT_COUNT = 5;
-const string FIND_ROOT_STRING_SYSTEM_CURRENT_LOG[SYSTEM_CURRENT_LOG_ROOT_COUNT] = {
-
-    MAKER_FOLDER_DRC,
-    ITEM_FOLDER_DRC,
-    ITEM_LOG_FOLDER_DRC,
-    ITEM_SYSTEM_LOG_FOLDER_DRC,
-    ITEM_SYSTEM_CURRENT_LOG_FOLDER_DRC
-};
-
-const int    SYSTEM_DAY_LOG_ROOT_COUNT = 5;
-const string FIND_ROOT_STRING_SYSTEM_DAY_LOG[SYSTEM_DAY_LOG_ROOT_COUNT] = {
-
-    MAKER_FOLDER_DRC,
-    ITEM_FOLDER_DRC,
-    ITEM_LOG_FOLDER_DRC,
-    ITEM_SYSTEM_LOG_FOLDER_DRC,
-    ITEM_SYSTEM_DAY_LOG_FOLDER_DRC
-};
-
 
 class SYSTEM_LOG_MANAGER : public LOG_MANAGER_BASE {
 
 private:
 
-    virtual ulong Get_Root(const string& file_name, MQH_STRING_VECTOR& result) override {
+    struct TIME_STR_P_DB {
+
+        string Root_Y, Root_M, Root_D;
+    };
+
+    TIME_STR_P_DB Time_Db;
+
+    virtual ulong Get_Root(const string& file_name, _vector<string>& result) override {
 
         std::tm Current_Time;
 
@@ -77,24 +23,23 @@ private:
         if (Error_Code != ERROR_SUCCESS)
             return Error_Code;
 
-        for (int i = 0; i < SYSTEM_DAY_LOG_ROOT_COUNT; i++) {
+        result.push_back(MAKER_FOLDER_DRC());
+        result.push_back(ITEM_FOLDER_DRC());
+        result.push_back(ITEM_LOG_FOLDER_DRC());
+        result.push_back(ITEM_SYSTEM_LOG_FOLDER_DRC());
+        result.push_back(ITEM_SYSTEM_DAY_LOG_FOLDER_DRC());
 
-            result.push_back(FIND_ROOT_STRING_SYSTEM_DAY_LOG[i]);
-        }
+        swprintf_s(Time_Db.Root_Y, 1024, L"\\%04d", Current_Time.tm_year + 1900);
 
-        wchar_t Buf[1024];
+        result.push_back(Time_Db.Root_Y);
 
-        swprintf_s(Buf, _countof(Buf), L"\\%04d", Current_Time.tm_year + 1900);
+        swprintf_s(Time_Db.Root_M, 1024, L"\\%02d", Current_Time.tm_mon + 1);
 
-        result.push_back(Buf);
+        result.push_back(Time_Db.Root_M);
 
-        swprintf_s(Buf, _countof(Buf), L"\\%02d", Current_Time.tm_mon + 1);
+        swprintf_s(Time_Db.Root_D, 1024, L"\\%02d", Current_Time.tm_mday);
 
-        result.push_back(Buf);
-
-        swprintf_s(Buf, _countof(Buf), L"\\%02d", Current_Time.tm_mday);
-
-        result.push_back(Buf);
+        result.push_back(Time_Db.Root_D);
 
         return (uint)result.size();
     }
@@ -110,7 +55,7 @@ private:
         if (Error_Code != ERROR_SUCCESS)
             return Error_Code;
 
-        MQH_STRING_VECTOR Command_Line_Value;
+        _vector<string> Command_Line_Value;
 
         PROCESS_MANAGER Process_Mng;
 
@@ -128,13 +73,13 @@ private:
             Current_Time.tm_year + 1900, Current_Time.tm_mon + 1, Current_Time.tm_mday,
             Current_Time.tm_hour, Current_Time.tm_min, Current_Time.tm_sec, Milli_Sec,
             error,
-            Command_Line_Value[COMMAND_LINE_ASSIGNMENT_NUMBER_CALL_APP_NAME].data(),
-            Command_Line_Value[COMMAND_LINE_ASSIGNMENT_NUMBER_FILE_NAME].data(),
-            Command_Line_Value[COMMAND_LINE_ASSIGNMENT_NUMBER_LINE_NUMBER].data(),
-            Command_Line_Value[COMMAND_LINE_ASSIGNMENT_NUMBER_VERSION].data()
+            (wchar_t*)Command_Line_Value.Get_At(COMMAND_LINE_ASSIGNMENT_NUMBER_CALL_APP_NAME),
+            (wchar_t*)Command_Line_Value.Get_At(COMMAND_LINE_ASSIGNMENT_NUMBER_FILE_NAME),
+            (wchar_t*)Command_Line_Value.Get_At(COMMAND_LINE_ASSIGNMENT_NUMBER_LINE_NUMBER),
+            (wchar_t*)Command_Line_Value.Get_At(COMMAND_LINE_ASSIGNMENT_NUMBER_VERSION)
         );
 
-        Log_Data = Buf;
+        StringAssign(Log_Data, Buf);
 
         return ERROR_SUCCESS;
     }
@@ -145,12 +90,13 @@ private:
 
         SYSTEM_LOG_MANAGER() {
 
-            Day_Base_Root = NULL_STRING;
+            StringAssign(Day_Base_Root, NULL_STRING);
 
-            for (int i = 0; i < SYSTEM_DAY_LOG_ROOT_COUNT; i++) {
-
-                Day_Base_Root.append(FIND_ROOT_STRING_SYSTEM_DAY_LOG[i]);
-            }
+            Day_Base_Root.append(MAKER_FOLDER_DRC());
+            Day_Base_Root.append(ITEM_FOLDER_DRC());
+            Day_Base_Root.append(ITEM_LOG_FOLDER_DRC());
+            Day_Base_Root.append(ITEM_SYSTEM_LOG_FOLDER_DRC());
+            Day_Base_Root.append(ITEM_SYSTEM_DAY_LOG_FOLDER_DRC());
         }
 
         virtual ulong Get_Main_Directory(string& result) override {
@@ -159,7 +105,7 @@ private:
 
             if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &path))) {
 
-                result = path;
+                StringAssign(result, path);
                 CoTaskMemFree(path);
 
                 return ERROR_SUCCESS;
@@ -186,8 +132,12 @@ public:
 
     inline ulong Write_System_Log(const ulong& boot_time, SYSTEM_LOG_MANAGER& file_mng) {
 
-        string File_Name = NULL_STRING;
-        string File_Drc = NULL_STRING;
+        
+        string File_Name;
+        string File_Drc;
+
+        StringAssign(File_Name, NULL_STRING);
+        StringAssign(File_Drc, NULL_STRING);
 
         ulong Error_Code = file_mng.Get_Log_File_Name(File_Name);
 
@@ -196,7 +146,7 @@ public:
         if (Error_Code != ERROR_SUCCESS)
             return Error_Code;
 
-        string Main_Drc = NULL_STRING;
+        string Main_Drc;
 
         Error_Code = file_mng.Get_Main_Directory(Main_Drc);
 
@@ -211,7 +161,7 @@ public:
 
         ulong Error = 0, Vis = 0, Last_Time = 0;
 
-        Error_Code = Byte8_Read(Error, Last_Time, ITEM_ERR_MS_ERR_FILE_NAME, File_M);
+        Error_Code = Byte8_Read(Error, Last_Time, ITEM_ERR_MS_ERR_FILE_NAME(), File_M);
 
         if (Error_Code != ERROR_SUCCESS)
             return Error_Code;
@@ -223,7 +173,7 @@ public:
             SYSTEM_ERROR_VALUE::Set_System_Error(
 
                 CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_ERROR_CODE_VALUE),
-                __GetWin32LastError(),
+                _GetWin32LastError(),
                 __LINE__,
                 __FILEW__
             );
@@ -231,7 +181,7 @@ public:
             return CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_ERROR_CODE_VALUE);
         }
 
-        Error_Code = Byte8_Read(Vis, Last_Time, ITEM_ERR_MS_VISIBLE_ERR_NUM_FILE_NAME, File_M);
+        Error_Code = Byte8_Read(Vis, Last_Time, ITEM_ERR_MS_VISIBLE_ERR_NUM_FILE_NAME(), File_M);
 
         if (Error_Code != ERROR_SUCCESS)
             return Error_Code;
@@ -243,7 +193,7 @@ public:
             SYSTEM_ERROR_VALUE::Set_System_Error(
 
                 CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_ERROR_CODE_VALUE),
-                __GetWin32LastError(),
+                _GetWin32LastError(),
                 __LINE__,
                 __FILEW__
             );
@@ -282,7 +232,9 @@ int WINAPI WinMain(
 
     PROCESS_MANAGER Process_Mng;
 
-    if (!Process_Mng.Trial_Get_Mutex(MUTEX_LOCAL_NAME_SYSTEM_LOG_PROCESS)) {
+    string test = MUTEX_LOCAL_NAME_SYSTEM_LOG_PROCESS();
+
+    if (!Process_Mng.Trial_Get_Mutex(MUTEX_LOCAL_NAME_SYSTEM_LOG_PROCESS())) {
 
         return 0;
     }
