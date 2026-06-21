@@ -172,13 +172,13 @@ public:
 
             SYSTEM_ERROR_VALUE::Set_System_Error(
 
-                CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_ERROR_CODE_VALUE),
+                CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_FILE_TIME),
                 _GetWin32LastError(),
                 __LINE__,
                 __FILEW__
             );
 
-            return CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_ERROR_CODE_VALUE);
+            return CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_FILE_TIME);
         }
 
         Error_Code = Byte8_Read(Vis, Last_Time, ITEM_ERR_MS_VISIBLE_ERR_NUM_FILE_NAME(), File_M);
@@ -192,13 +192,13 @@ public:
 
             SYSTEM_ERROR_VALUE::Set_System_Error(
 
-                CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_ERROR_CODE_VALUE),
+                CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_FILE_TIME),
                 _GetWin32LastError(),
                 __LINE__,
                 __FILEW__
             );
 
-            return CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_ERROR_CODE_VALUE);
+            return CALC_CUSTOM_ERROR_CODE(CUSTOM_ERROR_CODE_FAILED_GET_FILE_TIME);
         }
 
         ulong Read_Error_Code = Error;
@@ -231,8 +231,6 @@ int WINAPI WinMain(
 
 
     PROCESS_MANAGER Process_Mng;
-
-    string test = MUTEX_LOCAL_NAME_SYSTEM_LOG_PROCESS();
 
     if (!Process_Mng.Trial_Get_Mutex(MUTEX_LOCAL_NAME_SYSTEM_LOG_PROCESS())) {
 
