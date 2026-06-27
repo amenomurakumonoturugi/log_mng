@@ -126,7 +126,7 @@ private:
         }
 };
 
-class COMPOSITION_LOG_FLOW : public COMPOSITION_FILE_FLOW {
+class COMPOSITION_LOG_FLOW : public FLOW_FILE_CONTROLLER {
 
 public:
 
@@ -228,7 +228,7 @@ int WINAPI WinMain(
     GetSystemTimeAsFileTime(&Curret_Time);
 
     ulong Boot_Time = ((ulong)Curret_Time.dwHighDateTime << 32) | Curret_Time.dwLowDateTime;
-
+    
 
     PROCESS_MANAGER Process_Mng;
 
