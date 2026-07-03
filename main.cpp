@@ -1,4 +1,4 @@
-
+#include <afxwin.h>
 #include "common_mqh_cpp_PCH.h"
 
 class SYSTEM_LOG_MANAGER : public LOG_MANAGER_BASE {
