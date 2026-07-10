@@ -138,7 +138,7 @@
     <ClInclude Include="..\common_mqh_cpp_class_byte8.h" />
     <ClInclude Include="..\common_mqh_cpp_class_error.h" />
     <ClInclude Include="..\common_mqh_cpp_class_file_base.h" />
-    <ClInclude Include="..\common_mqh_cpp_class_file_flow.h" />
+    <ClInclude Include="..\common_mqh_cpp_class_flow.h" />
     <ClInclude Include="..\common_mqh_cpp_class_language.h" />
     <ClInclude Include="..\common_mqh_cpp_class_log_base.h" />
     <ClInclude Include="..\common_mqh_cpp_class_pipe.h" />
